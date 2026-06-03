@@ -103,3 +103,37 @@ function endGame() {
     startScreen.style.display = "block";
     startScreen.innerHTML = `GAME OVER!<br>Pontuação: ${playerStats.score}<br><b>Clique aqui para reiniciar</b>`;
 }
+// 1. Detekte lè manèt la konekte
+window.addEventListener("gamepadconnected", (e) => {
+  console.log("Manèt la konekte avèk siksè:", e.gamepad.id);
+});
+
+// 2. Fonksyon pou li sa k ap pase sou manèt la (bouton ak manch/joystick)
+function tchekeManet() {
+  const gamepads = navigator.getGamepads();
+  if (!gamepads) return;
+
+  // Pran premye manèt ki konekte a
+  const gp = gamepads[0]; 
+  if (gp) {
+    // Tcheke bouton yo (pa egzanp, bouton 'A' oswa 'X' se bouton 0 sou pifò manèt)
+    if (gp.buttons[0].pressed) {
+      console.log("Ou peze bouton Akselerasyon an!");
+      // Mete aksyon pou machin nan avanse isit la
+    }
+
+    // Tcheke manch yo (Axes) pou vire adwat oswa agoch
+    const aksX = gp.axes[0]; // Aks horizontal (gòch/dwat)
+    if (aksX < -0.5) {
+      console.log("Vire agoch");
+    } else if (aksX > 0.5) {
+      console.log("Vire adwat");
+    }
+  }
+
+  // Kontiye tcheke manèt la nan chak ankadreman (frame) jwèt la
+  requestAnimationFrame(tchekeManet);
+}
+
+// Kòmanse koute manèt la
+requestAnimationFrame(tchekeManet);
