@@ -167,4 +167,299 @@ body {
     border-radius: 15px;
     cursor: pointer;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}/* ========================================================
+   CONFIGURAÇÃO GERAL E CENÁRIO (Estrada, Calçada e Grama)
+   ======================================================== */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body {
+    background: #222;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#game-container {
+    width: 400px;
+    height: 100vh;
+    background: #2e7d32; /* Grama verde nas laterais */
+    position: relative;
+    border-left: 5px solid #444;
+    border-right: 5px solid #444;
+}
+
+#road {
+    width: 300px;
+    height: 100%;
+    background: #333; /* Asfalto cinza escuro */
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Calçadas Zebradas */
+.side-walk {
+    width: 15px;
+    height: 100%;
+    position: absolute;
+    background: repeating-linear-gradient(#fff 0, #fff 50px, #d32f2f 50px, #d32f2f 100px);
+}
+.left { left: 0; }
+.right { right: 0; }
+
+/* Faixas Brancas do Meio */
+.line {
+    width: 8px;
+    height: 100px;
+    background: white;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* ========================================================
+   VISUAL DO CARRO DO JOGADOR (Azul com vidros e faróis)
+   ======================================================== */
+#player {
+    width: 50px;
+    height: 80px;
+    background: #1e88e5; /* Cor azul do chassi */
+    position: absolute;
+    bottom: 50px;
+    left: 125px;
+    border-radius: 12px 12px 8px 8px; /* Frente arredondada */
+    z-index: 5;
+    border-bottom: 4px solid #ff1744; /* Lanterna traseira vermelha */
+    /* Efeito de farol iluminando a estrada à frente */
+    box-shadow: 
+        0 8px 15px rgba(0,0,0,0.5),
+        -15px -40px 35px rgba(255, 255, 190, 0.5), 
+        15px -40px 35px rgba(255, 255, 190, 0.5);
+}
+
+/* Para-brisa do jogador */
+#player::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 5px;
+    width: 40px;
+    height: 15px;
+    background: #263238; /* Cor do vidro fumê */
+    border-radius: 4px;
+}
+
+/* Vidro Traseiro do jogador */
+#player::after {
+    content: '';
+    position: absolute;
+    bottom: 15px;
+    left: 7px;
+    width: 36px;
+    height: 10px;
+    background: #263238;
+    border-radius: 2px;
+}
+
+/* ========================================================
+   VISUAL DOS CARROS INIMIGOS (Vermelhos com vidros)
+   ======================================================== */
+.enemy {
+    width: 50px;
+    height: 80px;
+    background: #e53935; /* Cor vermelha do chassi inimigo */
+    position: absolute;
+    border-radius: 12px 12px 8px 8px;
+    z-index: 4;
+    border-bottom: 4px solid #ff1744;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+}
+
+/* Para-brisa do inimigo */
+.enemy::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 5px;
+    width: 40px;
+    height: 15px;
+    background: #263238;
+    border-radius: 4px;
+}
+
+/* Vidro Traseiro do inimigo */
+.enemy::after {
+    content: '';
+    position: absolute;
+    bottom: 15px;
+    left: 7px;
+    width: 36px;
+    height: 10px;
+    background: #263238;
+    border-radius: 2px;
+}
+
+/* ========================================================
+   INTERFACES (Placar e Mensagens)
+   ======================================================== */
+#score {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    font-size: 20px;
+    border-radius: 5px;
+    z-index: 10;
+}
+
+#message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #f44336;
+    color: white;
+    padding: 30px;
+    text-align: center;
+    font-size: 22px;
+    z-index: 20;
+    width: 80%;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* ========================================================
+   PLACAR / RANKING (Leaderboard) + Formulário de Nome
+   ======================================================== */
+#app-wrapper {
+    display: flex;
+    align-items: stretch;
+    gap: 15px;
+}
+
+#leaderboard-panel {
+    width: 220px;
+    max-height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+#leaderboard-panel h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #ffca28;
+}
+
+#leaderboard-list {
+    list-style: none;
+    flex: 1;
+    overflow-y: auto;
+    margin: 0 0 10px 0;
+    padding: 0;
+}
+
+#leaderboard-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+#leaderboard-list li.empty {
+    justify-content: center;
+    color: #999;
+    font-style: italic;
+}
+
+.lb-name {
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 130px;
+}
+
+.lb-score {
+    color: #66bb6a;
+    font-weight: bold;
+}
+
+#clearBoardBtn {
+    background: #444;
+    color: #ccc;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+#clearBoardBtn:hover { background: #555; }
+
+/* Formulário de nome (tela de início / game over) */
+#message {
+    cursor: default;
+}
+
+#message .game-title,
+#message .game-over-title {
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+#message input#playerNameInput {
+    display: block;
+    width: 100%;
+    margin: 15px 0 10px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    font-size: 16px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+#message button#startBtn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background: #2e7d32;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+#message button#startBtn:hover { background: #388e3c; }
+
+#message .hint {
+    font-size: 12px;
+    margin-top: 8px;
+    opacity: 0.85;
+}
+
+/* Layout responsivo: empilha o placar embaixo em telas pequenas */
+@media (max-width: 700px) {
+    body { height: auto; min-height: 100vh; overflow-y: auto; padding: 15px 0; }
+    #app-wrapper { flex-direction: column; align-items: center; }
+    #leaderboard-panel { width: 300px; max-height: 220px; }
 }
