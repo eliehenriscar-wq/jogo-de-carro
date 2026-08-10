@@ -1,11 +1,18 @@
 const scoreEl = document.querySelector('#score');
+const levelEl = document.querySelector('#level');
 const messageBox = document.querySelector('#message');
 const gameArea = document.querySelector('#road');
 const leaderboardList = document.querySelector('#leaderboard-list');
 const clearBoardBtn = document.querySelector('#clearBoardBtn');
 const musicToggleBtn = document.querySelector('#music-toggle-btn');
 
-let playerStats = { speed: 5, score: 0, start: false };
+let playerStats = { 
+    speed: 5, 
+    score: 0, 
+    start: false,
+    level: 1,
+    baseSpeed: 5
+};
 let keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, Space: false };
 let currentPlayerName = '';
 const LB_KEY = 'corridaProLeaderboard';
@@ -135,7 +142,10 @@ function moveLines() {
 function moveEnemies(player) {
     let enemies = document.querySelectorAll('.enemy');
     enemies.forEach(item => {
-        if (isCollide(player, item)) endGame();
+        if (isCollide(player, item)) {
+            explodePlayer(player);
+            return;
+        }
         if (item.y >= 750) {
             item.y = -300;
             item.style.left = Math.floor(Math.random() * 240) + "px";
@@ -152,6 +162,76 @@ function getRandomColor() {
 }
 
 /* ========================================================
+   EXPLOSION DE LA VOITURE
+   ======================================================== */
+function explodePlayer(player) {
+    if (!playerStats.start) return;
+    playerStats.start = false;
+
+    // Position de la voiture
+    const rect = player.getBoundingClientRect();
+    const roadRect = gameArea.getBoundingClientRect();
+    const left = rect.left - roadRect.left + rect.width / 2;
+    const top = rect.top - roadRect.top + rect.height / 2;
+
+    // Cache la voiture normale
+    player.style.visibility = 'hidden';
+
+    // Crée le conteneur d'explosion
+    const explosion = document.createElement('div');
+    explosion.className = 'explosion';
+    explosion.style.left = left + 'px';
+    explosion.style.top = top + 'px';
+    gameArea.appendChild(explosion);
+
+    // Particules
+    for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const angle = (Math.PI * 2 * i) / 18;
+        const distance = 40 + Math.random() * 60;
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance;
+        p.style.setProperty('--dx', dx + 'px');
+        p.style.setProperty('--dy', dy + 'px');
+        p.style.background = ['#ff5722', '#ffeb3b', '#ff9800', '#f44336', '#fff'][Math.floor(Math.random() * 5)];
+        explosion.appendChild(p);
+    }
+
+    // Son de crash
+    AudioEngine.playCrash();
+
+    // Petit tremblement de l'écran
+    gameArea.classList.add('shake');
+    setTimeout(() => gameArea.classList.remove('shake'), 500);
+
+    // Après l'animation → Game Over
+    setTimeout(() => {
+        saveScore(currentPlayerName, playerStats.score);
+        renderStartScreen(playerStats.score);
+    }, 900);
+}
+
+/* ========================================================
+   NIVEAUX & VITESSE
+   ======================================================== */
+function updateLevel() {
+    // Tous les 200 points → nouveau niveau + accélération
+    const newLevel = Math.floor(playerStats.score / 200) + 1;
+
+    if (newLevel > playerStats.level) {
+        playerStats.level = newLevel;
+        // Accélération progressive
+        playerStats.speed = playerStats.baseSpeed + (playerStats.level - 1) * 1.8;
+        levelEl.innerText = "Level: " + playerStats.level;
+        
+        // Petit feedback visuel
+        levelEl.classList.add('level-up');
+        setTimeout(() => levelEl.classList.remove('level-up'), 600);
+    }
+}
+
+/* ========================================================
    INÍCIO DO JOGO
    ======================================================== */
 function startGame() {
@@ -160,7 +240,12 @@ function startGame() {
 
     playerStats.start = true;
     playerStats.score = 0;
+    playerStats.level = 1;
+    playerStats.speed = playerStats.baseSpeed;
     messageBox.style.display = "none";
+
+    scoreEl.innerText = "Score: 0";
+    levelEl.innerText = "Level: 1";
 
     gameArea.innerHTML = `
         <div class="side-walk left"></div>
@@ -211,15 +296,11 @@ function gamePlay() {
         playerStats.score++;
         scoreEl.innerText = "Score: " + playerStats.score;
 
+        // Mise à jour du niveau
+        updateLevel();
+
         window.requestAnimationFrame(gamePlay);
     }
-}
-
-function endGame() {
-    playerStats.start = false;
-    AudioEngine.playCrash();
-    saveScore(currentPlayerName, playerStats.score);
-    renderStartScreen(playerStats.score);
 }
 
 /* ========================================================
