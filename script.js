@@ -18,7 +18,7 @@ let currentPlayerName = '';
 const LB_KEY = 'corridaProLeaderboard';
 
 /* ========================================================
-   PLACAR (Leaderboard)
+   PLACAR
    ======================================================== */
 function loadLeaderboard() {
     try {
@@ -104,7 +104,7 @@ function tryStart() {
 }
 
 /* ========================================================
-   CONTROLES TECLADO
+   CONTROLES
    ======================================================== */
 document.addEventListener('keydown', (e) => {
     keys[e.key] = true;
@@ -122,7 +122,7 @@ document.addEventListener('keyup', (e) => {
 });
 
 /* ========================================================
-   COLISÃO E MOVIMENTAÇÃO
+   COLISÃO E MOUVEMENT
    ======================================================== */
 function isCollide(a, b) {
     let aRect = a.getBoundingClientRect();
@@ -162,50 +162,42 @@ function getRandomColor() {
 }
 
 /* ========================================================
-   EXPLOSION DE LA VOITURE
+   EXPLOSION
    ======================================================== */
 function explodePlayer(player) {
     if (!playerStats.start) return;
     playerStats.start = false;
 
-    // Position de la voiture
     const rect = player.getBoundingClientRect();
     const roadRect = gameArea.getBoundingClientRect();
     const left = rect.left - roadRect.left + rect.width / 2;
     const top = rect.top - roadRect.top + rect.height / 2;
 
-    // Cache la voiture normale
     player.style.visibility = 'hidden';
 
-    // Crée le conteneur d'explosion
     const explosion = document.createElement('div');
     explosion.className = 'explosion';
     explosion.style.left = left + 'px';
     explosion.style.top = top + 'px';
     gameArea.appendChild(explosion);
 
-    // Particules
     for (let i = 0; i < 18; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
         const angle = (Math.PI * 2 * i) / 18;
         const distance = 40 + Math.random() * 60;
-        const dx = Math.cos(angle) * distance;
-        const dy = Math.sin(angle) * distance;
-        p.style.setProperty('--dx', dx + 'px');
-        p.style.setProperty('--dy', dy + 'px');
+        p.style.setProperty('--dx', Math.cos(angle) * distance + 'px');
+        p.style.setProperty('--dy', Math.sin(angle) * distance + 'px');
         p.style.background = ['#ff5722', '#ffeb3b', '#ff9800', '#f44336', '#fff'][Math.floor(Math.random() * 5)];
         explosion.appendChild(p);
     }
 
-    // Son de crash
+    // VWA 2 : Son Crash
     AudioEngine.playCrash();
 
-    // Petit tremblement de l'écran
     gameArea.classList.add('shake');
     setTimeout(() => gameArea.classList.remove('shake'), 500);
 
-    // Après l'animation → Game Over
     setTimeout(() => {
         saveScore(currentPlayerName, playerStats.score);
         renderStartScreen(playerStats.score);
@@ -213,28 +205,29 @@ function explodePlayer(player) {
 }
 
 /* ========================================================
-   NIVEAUX & VITESSE
+   NIVEAUX
    ======================================================== */
 function updateLevel() {
-    // Tous les 200 points → nouveau niveau + accélération
     const newLevel = Math.floor(playerStats.score / 200) + 1;
 
     if (newLevel > playerStats.level) {
         playerStats.level = newLevel;
-        // Accélération progressive
         playerStats.speed = playerStats.baseSpeed + (playerStats.level - 1) * 1.8;
         levelEl.innerText = "Level: " + playerStats.level;
         
-        // Petit feedback visuel
         levelEl.classList.add('level-up');
         setTimeout(() => levelEl.classList.remove('level-up'), 600);
+
+        // VWA 3 : Son Level Up
+        AudioEngine.playLevelUp();
     }
 }
 
 /* ========================================================
-   INÍCIO DO JOGO
+   START GAME
    ======================================================== */
 function startGame() {
+    // VWA 1 : Mizik
     AudioEngine.startMusic();
     updateMusicButton();
 
@@ -254,7 +247,6 @@ function startGame() {
         <div id="player"></div>
     `;
 
-    // Linhas da estrada
     for (let x = 0; x < 5; x++) {
         let line = document.createElement('div');
         line.classList.add('line');
@@ -263,7 +255,6 @@ function startGame() {
         document.getElementById('line-container').appendChild(line);
     }
 
-    // Inimigos
     for (let x = 0; x < 3; x++) {
         let enemy = document.createElement('div');
         enemy.className = 'enemy ' + getRandomColor();
@@ -295,8 +286,6 @@ function gamePlay() {
 
         playerStats.score++;
         scoreEl.innerText = "Score: " + playerStats.score;
-
-        // Mise à jour du niveau
         updateLevel();
 
         window.requestAnimationFrame(gamePlay);
@@ -304,7 +293,7 @@ function gamePlay() {
 }
 
 /* ========================================================
-   MÚSICA (Web Audio API)
+   AUDIO ENGINE - 3 VWA
    ======================================================== */
 const AudioEngine = (() => {
     let ctx = null;
@@ -317,6 +306,7 @@ const AudioEngine = (() => {
     const tempo = 132;
     const secondsPerBeat = 60 / tempo;
 
+    // Mizik (VWA 1)
     const leadNotes = [440, 0, 523.25, 440, 0, 392, 440, 0, 523.25, 587.33, 523.25, 440, 0, 392, 349.23, 0];
     const bassNotes = [110, 110, 146.83, 146.83, 130.81, 130.81, 98, 98];
 
@@ -324,7 +314,7 @@ const AudioEngine = (() => {
         if (!ctx) {
             ctx = new (window.AudioContext || window.webkitAudioContext)();
             masterGain = ctx.createGain();
-            masterGain.gain.value = isMuted ? 0 : 0.3;
+            masterGain.gain.value = isMuted ? 0 : 0.32;
             masterGain.connect(ctx.destination);
         }
         if (ctx.state === 'suspended') ctx.resume();
@@ -350,14 +340,15 @@ const AudioEngine = (() => {
         while (nextNoteTime < ctx.currentTime + 0.2) {
             let leadStep = noteIndex % leadNotes.length;
             let bassStep = noteIndex % bassNotes.length;
-            playNote(leadNotes[leadStep], nextNoteTime, secondsPerBeat * 0.9, 'square', 0.10);
-            playNote(bassNotes[bassStep], nextNoteTime, secondsPerBeat * 0.9, 'triangle', 0.16);
+            playNote(leadNotes[leadStep], nextNoteTime, secondsPerBeat * 0.9, 'square', 0.09);
+            playNote(bassNotes[bassStep], nextNoteTime, secondsPerBeat * 0.9, 'triangle', 0.14);
             nextNoteTime += secondsPerBeat / 2;
             noteIndex++;
         }
         requestAnimationFrame(scheduler);
     }
 
+    // ========== VWA 1 : Mizik ==========
     function startMusic() {
         ensureContext();
         if (musicStarted) return;
@@ -367,9 +358,13 @@ const AudioEngine = (() => {
         scheduler();
     }
 
+    // ========== VWA 2 : Crash / Eksplozyon ==========
     function playCrash() {
         ensureContext();
-        let bufferSize = Math.floor(ctx.sampleRate * 0.3);
+        const now = ctx.currentTime;
+
+        // Noise (eksplozyon)
+        let bufferSize = Math.floor(ctx.sampleRate * 0.35);
         let buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         let data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
@@ -377,23 +372,59 @@ const AudioEngine = (() => {
         }
         let noise = ctx.createBufferSource();
         noise.buffer = buffer;
+        let noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.55, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        noise.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        noise.start(now);
+
+        // Son grav (boom)
+        let osc = ctx.createOscillator();
         let g = ctx.createGain();
-        g.gain.value = 0.5;
-        noise.connect(g);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.3);
+        g.gain.setValueAtTime(0.4, now);
+        g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(g);
         g.connect(masterGain);
-        noise.start();
+        osc.start(now);
+        osc.stop(now + 0.35);
+    }
+
+    // ========== VWA 3 : Level Up ==========
+    function playLevelUp() {
+        ensureContext();
+        const now = ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+
+        notes.forEach((freq, i) => {
+            let osc = ctx.createOscillator();
+            let g = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            g.gain.setValueAtTime(0, now + i * 0.08);
+            g.gain.linearRampToValueAtTime(0.18, now + i * 0.08 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+            osc.connect(g);
+            g.connect(masterGain);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.3);
+        });
     }
 
     function toggleMute() {
         ensureContext();
         isMuted = !isMuted;
-        masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : 0.3, ctx.currentTime + 0.05);
+        masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : 0.32, ctx.currentTime + 0.05);
         return isMuted;
     }
 
     return {
         startMusic,
         playCrash,
+        playLevelUp,
         toggleMute,
         get isMuted() { return isMuted; }
     };
@@ -417,7 +448,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ========================================================
-   SUPORTE A MANETE (Gamepad)
+   GAMEPAD
    ======================================================== */
 const GamepadController = (() => {
     let gamepadIndex = null;
@@ -463,12 +494,10 @@ const GamepadController = (() => {
     }
 
     window.addEventListener('gamepadconnected', (e) => {
-        console.log(`🎮 Manèt konekte: ${e.gamepad.id}`);
         gamepadIndex = e.gamepad.index;
     });
 
     window.addEventListener('gamepaddisconnected', (e) => {
-        console.log('🎮 Manèt debranche');
         if (gamepadIndex === e.gamepad.index) gamepadIndex = null;
     });
 
@@ -476,7 +505,7 @@ const GamepadController = (() => {
 })();
 
 /* ========================================================
-   INICIALIZAÇÃO
+   INIT
    ======================================================== */
 renderLeaderboard();
 renderStartScreen();
